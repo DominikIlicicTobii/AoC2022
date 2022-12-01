@@ -53,7 +53,7 @@ pub fn parse_input(mut file: File) -> Vec<Elf> {
                 }
                 LineParser::ELF(calori) => calories.push(calori),
             },
-            Err(_) => panic!("Line was not parsed"),
+            Err(_) => panic!("WARNING: Line was not parsed"),
         }
     }
 
@@ -65,7 +65,7 @@ pub fn get_answer(elfs: &Vec<Elf>) -> i32 {
 
     tmp.sort_by_key(|e| e.sum);
 
-    tmp.last().unwrap().sum
+    tmp.iter().rev().take(3).map(|e| e.sum).sum()
 }
 
 #[derive(Debug, PartialEq)]
@@ -75,4 +75,4 @@ pub struct Position {
     pub aim: i32,
 }
 
-pub const CORRECT_ANSWER: i32 = 69281;
+pub const CORRECT_ANSWER: i32 = 201524;
