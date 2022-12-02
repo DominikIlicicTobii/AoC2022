@@ -10,7 +10,7 @@ const PAPER: i32 = 2;
 const SCISSOR: i32 = 3;
 
 #[derive(Debug, PartialEq)]
-enum Outcome {
+pub enum Outcome {
     DRAW,
     WIN,
     LOSS,
@@ -74,6 +74,26 @@ impl Pick {
             Self::SCISSOR => SCISSOR,
         }
     }
+
+    fn calculate(opponent: &Self, outcome: &Outcome) -> Self {
+        match opponent {
+            Pick::ROCK => match outcome {
+                Outcome::DRAW => Self::ROCK,
+                Outcome::WIN => Self::PAPER,
+                Outcome::LOSS => Self::SCISSOR,
+            },
+            Pick::PAPER => match outcome {
+                Outcome::DRAW => Self::PAPER,
+                Outcome::WIN => Self::SCISSOR,
+                Outcome::LOSS => Self::ROCK,
+            },
+            Pick::SCISSOR => match outcome {
+                Outcome::DRAW => Self::SCISSOR,
+                Outcome::WIN => Self::ROCK,
+                Outcome::LOSS => Self::PAPER,
+            },
+        }
+    }
 }
 
 impl FromStr for Pick {
@@ -81,15 +101,15 @@ impl FromStr for Pick {
 
     fn from_str(input: &str) -> Result<Pick, ()> {
         match input {
-            "A" | "X" => Ok(Pick::ROCK),
-            "B" | "Y" => Ok(Pick::PAPER),
-            "C" | "Z" => Ok(Pick::SCISSOR),
+            "A" => Ok(Pick::ROCK),
+            "B" => Ok(Pick::PAPER),
+            "C" => Ok(Pick::SCISSOR),
             _ => panic!("Pick cant be parsed!"),
         }
     }
 }
 
-type Tokens = Vec<(Pick, Pick)>;
+type Tokens = Vec<(Pick, Outcome)>;
 
 pub fn parse_input(mut file: File) -> Tokens {
     let mut contents = String::with_capacity(10000);
@@ -101,22 +121,22 @@ pub fn parse_input(mut file: File) -> Tokens {
         assert_eq!(split.len(), 2);
 
         let opponent = Pick::from_str(split[0]).unwrap();
-        let you = Pick::from_str(split[1]).unwrap();
+        let outcome = Outcome::from_str(split[1]).unwrap();
 
-        parsed_input.push((opponent, you));
+        parsed_input.push((opponent, outcome));
     }
 
     parsed_input
 }
 
-pub fn get_answer(tokens: &Vec<(Pick, Pick)>) -> i32 {
+pub fn get_answer(tokens: &Vec<(Pick, Outcome)>) -> i32 {
     let mut sum = 0;
     for line in tokens {
-        let (opponent, you) = line;
-        let outcome = Outcome::calculate(opponent, you);
+        let (opponent, outcome) = line;
+        let you = Pick::calculate(opponent, outcome);
         sum += outcome.value() + you.value();
     }
     sum
 }
 
-pub const CORRECT_ANSWER: i32 = 11603;
+pub const CORRECT_ANSWER: i32 = 12725;
