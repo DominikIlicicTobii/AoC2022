@@ -13,10 +13,12 @@ pub fn parse_input(mut file: File) -> Tokens {
 pub fn get_answer(tokens: &Tokens) -> i32 {
     let mut sum = 0;
 
-    for line in tokens {
-        assert_eq!(line.len() % 2, 0);
-        let (first, second) = line.split_at(line.len() / 2);
-        if let Some(duplicate) = get_duplicate(first, second) {
+    let i = tokens.len() / 3;
+
+    for l in 0..i {
+        let l = 3 * l;
+        let (a, b, c) = (&tokens[l], &tokens[l + 1], &tokens[l + 2]);
+        if let Some(duplicate) = get_duplicate(&a, &b, &c) {
             sum += get_item_value(duplicate);
         }
     }
@@ -33,11 +35,13 @@ fn get_item_value(c: char) -> i32 {
     }
 }
 
-fn get_duplicate(first: &str, second: &str) -> Option<char> {
+fn get_duplicate(first: &str, second: &str, third: &str) -> Option<char> {
     for c_first in first.chars() {
         for c_second in second.chars() {
-            if c_first == c_second {
-                return Some(c_first);
+            for c_third in third.chars() {
+                if c_first == c_second && c_first == c_third {
+                    return Some(c_first);
+                }
             }
         }
     }
@@ -51,12 +55,12 @@ mod tests {
 
     #[test]
     fn test_sort() {
-        let line = "dWlhclDHdFvDCCDfFq";
-        assert_eq!(line.len() % 2, 0);
-        let (first, second) = line.split_at(line.len() / 2);
-        let duplicate = get_duplicate(first, second);
+        let first = "dWlhclDHdFvDCCDfFq";
+        let second = "mGdZBZBwRGjZMFgvTvgtvv";
+        let third = "jwwJrzdzGdSbGGnNlzWczHzPHPhn";
+        let duplicate = get_duplicate(first, second, third);
 
-        assert_eq!(duplicate, Some('D'));
+        assert_eq!(duplicate, Some('d'));
     }
 
     #[test]
