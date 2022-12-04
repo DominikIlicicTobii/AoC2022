@@ -28,7 +28,7 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
     let mut sum = 0;
 
     for token in tokens {
-        if let Some(_) = fully_contains_one_range_in_other(&token.0, &token.1) {
+        if overlaps_at_all(&token.0, &token.1) {
             sum += 1;
         }
     }
@@ -38,23 +38,20 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
 
 type CleaningRange = (i32, i32);
 
-fn fully_contains_one_range_in_other(
-    first: &CleaningRange,
-    second: &CleaningRange,
-) -> Option<CleaningRange> {
+fn overlaps_at_all(first: &CleaningRange, second: &CleaningRange) -> bool {
     if first.1 - first.0 > second.1 - second.0 {
-        if second.0 >= first.0 && second.0 <= first.1 && second.1 >= first.0 && second.1 <= first.1
+        if second.0 >= first.0 && second.0 <= first.1 || second.1 >= first.0 && second.1 <= first.1
         {
-            return Some(second.clone());
+            return true;
         }
     } else {
-        if first.0 >= second.0 && first.0 <= second.1 && first.1 >= second.0 && first.1 <= second.1
+        if first.0 >= second.0 && first.0 <= second.1 || first.1 >= second.0 && first.1 <= second.1
         {
-            return Some(first.clone());
+            return true;
         }
     }
 
-    None
+    false
 }
 
 #[cfg(test)]
@@ -62,14 +59,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_fully_contains_one_range_in_other() {
-        let first = (2, 5);
+    fn test_overlaps_at_all() {
+        let first = (1, 3);
         let second = (3, 4);
-        assert_eq!(
-            fully_contains_one_range_in_other(&second, &first),
-            Some((3, 4))
-        );
+        assert_eq!(overlaps_at_all(&second, &first), true);
     }
 }
 
-pub const CORRECT_ANSWER: i32 = 560;
+pub const CORRECT_ANSWER: i32 = 839;
