@@ -57,8 +57,13 @@ pub fn parse_input(mut file: File) -> (Vec<Stack>, Tokens) {
 
 pub fn get_answer(stacks: &mut Vec<Stack>, tokens: &Tokens) -> String {
     for (n, from, to) in tokens {
+        let mut tmp = Vec::<u8>::new();
         for _ in 0..*n {
             let p = stacks[*from].pop().unwrap();
+            tmp.push(p);
+        }
+        tmp.reverse();
+        for p in tmp {
             stacks[*to].push(p);
         }
     }
@@ -72,4 +77,4 @@ pub fn get_answer(stacks: &mut Vec<Stack>, tokens: &Tokens) -> String {
     result
 }
 
-pub const CORRECT_ANSWER: &str = "FWNSHLDNZ";
+pub const CORRECT_ANSWER: &str = "RNRGDNFQG";
