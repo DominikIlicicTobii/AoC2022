@@ -22,7 +22,7 @@ pub fn parse_input(input: &String) -> Tokens {
 pub fn get_answer(tokens: &Tokens) -> i32 {
     let mut num = 0;
 
-    'outer: for window in tokens.windows(4) {
+    'outer: for window in tokens.windows(14) {
         let mut window = window.to_vec();
         window.sort();
         for subwindow in window.windows(2) {
@@ -32,7 +32,7 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
             }
         }
 
-        return num + 4;
+        return num + 14;
     }
 
     unreachable!("There must be answer before end of tokens!")
@@ -50,4 +50,4 @@ mod tests {
     }
 }
 
-pub const CORRECT_ANSWER: i32 = 1929;
+pub const CORRECT_ANSWER: i32 = 3298;
