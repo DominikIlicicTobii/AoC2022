@@ -69,8 +69,6 @@ pub fn parse_input(input: &String) -> Tokens {
 }
 
 pub fn get_answer(tokens: &Tokens) -> i32 {
-    let mut num = 0;
-
     let mut dirs = HashMap::new();
     let mut last_dir = String::new();
 
@@ -126,13 +124,17 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
         }
     }
 
+    let root_size = dirs_recursive_size.get("//").unwrap().clone();
+    let mut appropriate_dirs = Vec::new();
+
     for (_, size) in dirs_recursive_size {
-        if size < 100000 {
-            num += size;
+        if size >= root_size - 40000000 {
+            appropriate_dirs.push(size);
         }
     }
 
-    num
+    appropriate_dirs.sort();
+    appropriate_dirs[0]
 }
 
 #[derive(Debug, Clone)]
@@ -141,4 +143,4 @@ pub enum Entry {
     DIR,
 }
 
-pub const CORRECT_ANSWER: i32 = 1243729;
+pub const CORRECT_ANSWER: i32 = 4443914;
