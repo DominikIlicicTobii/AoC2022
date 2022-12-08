@@ -33,23 +33,33 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
     assert_eq!(tokens.len(), tokens[0].len());
     let size = tokens.len();
 
-    let mut num = 4 * size as i32 - 4;
+    let mut highest_scenic_score = 0;
 
     for i in 1..size - 1 {
         for j in 1..size - 1 {
             let height = tokens[i][j];
-            if is_largest(height, &extract_side(&tokens, i, j, Side::LEFT))
-                || is_largest(height, &extract_side(&tokens, i, j, Side::RIGHT))
-                || is_largest(height, &extract_side(&tokens, i, j, Side::TOP))
-                || is_largest(height, &extract_side(&tokens, i, j, Side::BOTTOM))
-            {
-                num += 1;
-                continue;
+            let (l, r, t, b) = (
+                scenic_score(height, &extract_side(&tokens, i, j, Side::LEFT), Side::LEFT),
+                scenic_score(
+                    height,
+                    &extract_side(&tokens, i, j, Side::RIGHT),
+                    Side::RIGHT,
+                ),
+                scenic_score(height, &extract_side(&tokens, i, j, Side::TOP), Side::TOP),
+                scenic_score(
+                    height,
+                    &extract_side(&tokens, i, j, Side::BOTTOM),
+                    Side::BOTTOM,
+                ),
+            );
+            let candidate = l * r * t * b;
+            if candidate > highest_scenic_score {
+                highest_scenic_score = candidate;
             }
         }
     }
 
-    num
+    highest_scenic_score
 }
 
 fn extract_side(tokens: &Vec<Vec<u32>>, i: usize, j: usize, side: Side) -> Vec<u32> {
@@ -81,14 +91,28 @@ fn extract_side(tokens: &Vec<Vec<u32>>, i: usize, j: usize, side: Side) -> Vec<u
     return Vec::from(trees);
 }
 
-fn is_largest(height: u32, trees: &[u32]) -> bool {
-    for tree in trees {
-        if *tree >= height {
-            return false;
+fn scenic_score(height: u32, trees: &[u32], side: Side) -> i32 {
+    let trees = {
+        if side == Side::LEFT || side == Side::TOP {
+            let mut tmp = Vec::from(trees);
+            tmp.reverse();
+            tmp
+        } else {
+            Vec::from(trees)
+        }
+    };
+
+    let mut iter = trees.iter().enumerate();
+    loop {
+        match iter.next() {
+            Some((i, tree)) => {
+                if *tree >= height {
+                    return 1 + i as i32;
+                }
+            }
+            None => return trees.len() as i32,
         }
     }
-
-    true
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -105,9 +129,9 @@ mod tests {
 
     #[test]
     fn test_is_largest() {
-        assert_eq!(is_largest(1, &[3, 5, 1]), false);
-        assert_eq!(is_largest(5, &[3, 5, 1]), false);
-        assert_eq!(is_largest(6, &[3, 5, 1]), true);
+        assert_eq!(scenic_score(1, &[3, 5, 1], Side::LEFT), 1);
+        assert_eq!(scenic_score(5, &[3, 5, 1], Side::LEFT), 2);
+        assert_eq!(scenic_score(6, &[3, 5, 1], Side::LEFT), 3);
     }
 
     #[test]
@@ -131,4 +155,4 @@ mod tests {
     }
 }
 
-pub const CORRECT_ANSWER: i32 = 1733;
+pub const CORRECT_ANSWER: i32 = 284648;
