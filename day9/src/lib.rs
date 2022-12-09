@@ -1,6 +1,7 @@
 use core::panic;
 use std::fs::File;
 use std::io::prelude::*;
+use std::iter;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -58,8 +59,7 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
     let mut field = Field {
         size: 2000,
         spots: '.',
-        head: (1000, 1000),
-        tail: (1000, 1000),
+        rope: Vec::from([(1000, 1000), (1000, 1000)]),
         visited: Vec::from([(1000, 1000)]),
     };
 
@@ -70,96 +70,115 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
 struct Field {
     size: i32,
     spots: char,
-    head: (i32, i32),
-    tail: (i32, i32),
+    rope: Vec<(i32, i32)>,
     visited: Vec<(i32, i32)>,
 }
 
+fn move_tail(tail: (i32, i32), head: (i32, i32)) -> (i32, i32) {
+    let mut tail = tail;
+    let i_diff = (head.0 - tail.0).abs();
+    let j_diff = (head.1 - tail.1).abs();
+
+    if i_diff <= 1 && j_diff <= 1 {
+        return tail;
+    }
+
+    if i_diff == 0 {
+        tail.1 = if head.1 > tail.1 {
+            head.1 - 1
+        } else {
+            head.1 + 1
+        };
+        return tail;
+    }
+
+    if j_diff == 0 {
+        tail.0 = if head.0 > tail.0 {
+            head.0 - 1
+        } else {
+            head.0 + 1
+        };
+        return tail;
+    }
+
+    if j_diff == 2 && i_diff == 2 {
+        tail.1 = if head.1 > tail.1 {
+            head.1 - 1
+        } else {
+            head.1 + 1
+        };
+        tail.0 = if head.0 > tail.0 {
+            head.0 - 1
+        } else {
+            head.0 + 1
+        };
+        return tail;
+    }
+
+    if j_diff == 2 {
+        // move diagonally
+        tail.0 = head.0;
+        tail.1 = if head.1 > tail.1 {
+            head.1 - 1
+        } else {
+            head.1 + 1
+        };
+    }
+
+    if i_diff == 2 {
+        // move diagonally
+        tail.0 = if head.0 > tail.0 {
+            head.0 - 1
+        } else {
+            head.0 + 1
+        };
+        tail.1 = head.1;
+    }
+
+    return tail;
+}
+
 impl Field {
-    fn move_tail(&mut self) {
-        let i_diff = (self.head.0 - self.tail.0).abs();
-        let j_diff = (self.head.1 - self.tail.1).abs();
-
-        if i_diff <= 1 && j_diff <= 1 {
-            return;
+    fn move_rope(&mut self, prev_rope: &Vec<(i32, i32)>) {
+        for i in 1..prev_rope.len() {
+            self.rope[i] = move_tail(prev_rope[i], self.rope[i - 1]);
         }
 
-        if i_diff == 0 {
-            self.tail.1 = if self.head.1 > self.tail.1 {
-                self.head.1 - 1
-            } else {
-                self.head.1 + 1
-            };
-            if !self.visited.contains(&(self.tail.0, self.tail.1)) {
-                self.visited.push((self.tail.0, self.tail.1));
-            }
-            return;
-        }
-
-        if j_diff == 0 {
-            self.tail.0 = if self.head.0 > self.tail.0 {
-                self.head.0 - 1
-            } else {
-                self.head.0 + 1
-            };
-            if !self.visited.contains(&(self.tail.0, self.tail.1)) {
-                self.visited.push((self.tail.0, self.tail.1));
-            }
-            return;
-        }
-
-        if j_diff == 2 {
-            // move diagonally
-            self.tail.0 = self.head.0;
-            self.tail.1 = if self.head.1 > self.tail.1 {
-                self.head.1 - 1
-            } else {
-                self.head.1 + 1
-            };
-            if !self.visited.contains(&(self.tail.0, self.tail.1)) {
-                self.visited.push((self.tail.0, self.tail.1));
-            }
-        }
-
-        if i_diff == 2 {
-            // move diagonally
-            self.tail.0 = if self.head.0 > self.tail.0 {
-                self.head.0 - 1
-            } else {
-                self.head.0 + 1
-            };
-            self.tail.1 = self.head.1;
-            if !self.visited.contains(&(self.tail.0, self.tail.1)) {
-                self.visited.push((self.tail.0, self.tail.1));
-            }
+        if !self.visited.contains(&self.rope[prev_rope.len() - 1]) {
+            self.visited.push(self.rope[prev_rope.len() - 1]);
         }
     }
 
     fn render(&mut self, tokens: &Tokens) {
+        let mut prev_rope;
         for token in tokens {
             match token {
                 Token::L(steps) => {
                     for _ in 1..=*steps {
-                        self.head.0 -= 1;
-                        self.move_tail();
+                        prev_rope = self.rope.clone();
+                        self.rope[0].0 -= 1;
+                        self.move_rope(&prev_rope);
                     }
                 }
                 Token::D(steps) => {
                     for _ in 1..=*steps {
-                        self.head.1 -= 1;
-                        self.move_tail();
+                        prev_rope = self.rope.clone();
+                        self.rope[0].1 -= 1;
+                        self.move_rope(&prev_rope);
                     }
                 }
                 Token::U(steps) => {
                     for _ in 1..=*steps {
-                        self.head.1 += 1;
-                        self.move_tail();
+                        prev_rope = self.rope.clone();
+                        self.rope[0].1 += 1;
+                        self.move_rope(&prev_rope);
                     }
                 }
                 Token::R(steps) => {
                     for _ in 1..=*steps {
-                        self.head.0 += 1;
-                        self.move_tail();
+                        prev_rope = self.rope.clone();
+                        self.rope[0].0 += 1;
+                        self.move_rope(&prev_rope);
                     }
                 }
             }
@@ -169,36 +188,37 @@ impl Field {
 
 impl ToString for Field {
     fn to_string(&self) -> String {
-        let mut spots = Vec::<Vec<char>>::new();
-
-        for j in 0..self.size {
-            let mut tmp = Vec::<char>::new();
-            for i in 0..self.size {
-                if self.head.0 == i && self.head.1 == j {
-                    tmp.push('H');
-                    continue;
-                }
-                if self.tail.0 == i && self.tail.1 == j {
-                    tmp.push('T');
-                    continue;
-                }
-                if self.visited.contains(&(i, j)) {
-                    tmp.push('s');
-                    continue;
-                }
-                tmp.push(self.spots);
+        let mut spots: Vec<Vec<char>> = {
+            let mut tmp_spots: Vec<Vec<char>> = Vec::new();
+            for _ in 0..self.size {
+                let tmp = iter::repeat(self.spots).take(self.size as usize).collect();
+                tmp_spots.push(tmp);
             }
-            spots.push(tmp);
+
+            tmp_spots
+        };
+
+        for visit in &self.visited {
+            spots[visit.1 as usize][visit.0 as usize] = 's';
         }
 
+        for i in (1..self.rope.len()).rev() {
+            spots[self.rope[i].1 as usize][self.rope[i].0 as usize] =
+                char::from_digit(i as u32, 10).unwrap();
+        }
+        spots[self.rope[0].1 as usize][self.rope[0].0 as usize] = 'H';
+
+        let mut string = String::with_capacity(self.size as usize * self.size as usize);
+
         spots.reverse();
-        let mut string = String::new();
-        for vec_ch in spots {
-            for ch in vec_ch {
+
+        for vec in spots {
+            for ch in vec {
                 string.push(ch);
             }
             string.push('\n');
         }
+
         string
     }
 }
@@ -208,167 +228,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_field_to_string() {
-        let field = Field {
-            size: 10,
-            spots: '.',
-            head: (3, 1),
-            tail: (2, 1),
-            visited: Vec::from([(0, 0), (1, 0)]),
-        };
-
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\n..........\n..........\n..........\n..TH......\nss........\n".to_string()
-        );
-    }
-
-    #[test]
-    fn test_field_moving_right() {
+    fn test_field_moving_twn() {
         let mut field = Field {
-            size: 10,
+            size: 5,
             spots: '.',
-            head: (0, 0),
-            tail: (0, 0),
+            rope: Vec::from([(0, 0), (0, 0)]),
             visited: Vec::from([(0, 0)]),
         };
 
-        let tokens = Vec::from([Token::R(5)]);
+        let tokens = Vec::from([
+            Token::R(4),
+            Token::U(4),
+            Token::L(3),
+            Token::D(1),
+            Token::R(4),
+            Token::D(1),
+            Token::L(5),
+            Token::R(2),
+        ]);
         field.render(&tokens);
 
-        assert_eq!(field.head, (5, 0));
-        assert_eq!(field.tail, (4, 0));
-        assert_eq!(field.visited, [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]);
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\n..........\n..........\n..........\n..........\nssssTH....\n".to_string()
-        );
-    }
-
-    #[test]
-    fn test_field_moving_up() {
-        let mut field = Field {
-            size: 10,
-            spots: '.',
-            head: (0, 0),
-            tail: (0, 0),
-            visited: Vec::from([(0, 0)]),
-        };
-
-        let tokens = Vec::from([Token::U(3)]);
-        field.render(&tokens);
-
-        assert_eq!(field.head, (0, 3));
-        assert_eq!(field.tail, (0, 2));
-        assert_eq!(field.visited, [(0, 0), (0, 1), (0, 2)]);
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\n..........\nH.........\nT.........\ns.........\ns.........\n".to_string()
-        );
-    }
-
-    #[test]
-    fn test_field_moving_right_up_right() {
-        let mut field = Field {
-            size: 10,
-            spots: '.',
-            head: (0, 0),
-            tail: (0, 0),
-            visited: Vec::from([(0, 0)]),
-        };
-
-        let tokens = Vec::from([Token::R(3), Token::U(4), Token::R(5)]);
-        field.render(&tokens);
-
-        assert_eq!(field.head, (8, 4));
-        assert_eq!(field.tail, (7, 4));
-        assert_eq!(
-            field.visited,
-            [
-                (0, 0),
-                (1, 0),
-                (2, 0),
-                (3, 1),
-                (3, 2),
-                (3, 3),
-                (4, 4),
-                (5, 4),
-                (6, 4),
-                (7, 4)
-            ]
-        );
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\n....sssTH.\n...s......\n...s......\n...s......\nsss.......\n".to_string()
-        );
-    }
-
-    #[test]
-    fn test_field_moving_right_up_left() {
-        let mut field = Field {
-            size: 10,
-            spots: '.',
-            head: (0, 0),
-            tail: (0, 0),
-            visited: Vec::from([(0, 0)]),
-        };
-
-        let tokens = Vec::from([Token::R(3), Token::U(4), Token::L(3)]);
-        field.render(&tokens);
-
-        assert_eq!(field.head, (0, 4));
-        assert_eq!(field.tail, (1, 4));
-        assert_eq!(
-            field.visited,
-            [
-                (0, 0),
-                (1, 0),
-                (2, 0),
-                (3, 1),
-                (3, 2),
-                (3, 3),
-                (2, 4),
-                (1, 4)
-            ]
-        );
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\nHTs.......\n...s......\n...s......\n...s......\nsss.......\n".to_string()
-        );
-    }
-
-    #[test]
-    fn test_field_moving_right_up_down_right() {
-        let mut field = Field {
-            size: 10,
-            spots: '.',
-            head: (0, 0),
-            tail: (0, 0),
-            visited: Vec::from([(0, 0)]),
-        };
-
-        let tokens = Vec::from([Token::R(3), Token::U(4), Token::D(3), Token::R(3)]);
-        field.render(&tokens);
-
-        assert_eq!(field.head, (6, 1));
-        assert_eq!(field.tail, (5, 1));
-        assert_eq!(
-            field.visited,
-            [
-                (0, 0),
-                (1, 0),
-                (2, 0),
-                (3, 1),
-                (3, 2),
-                (3, 3),
-                (4, 1),
-                (5, 1)
-            ]
-        );
-        assert_eq!(
-            field.to_string(),
-            "..........\n..........\n..........\n..........\n..........\n..........\n...s......\n...s......\n...ssTH...\nsss.......\n".to_string()
-        );
+        assert_eq!(field.to_string(), "..ss.\n...ss\n.1Hss\n....s\nssss.\n");
     }
 }
 
