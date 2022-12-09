@@ -59,7 +59,18 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
     let mut field = Field {
         size: 2000,
         spots: '.',
-        rope: Vec::from([(1000, 1000), (1000, 1000)]),
+        rope: Vec::from([
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+            (1000, 1000),
+        ]),
         visited: Vec::from([(1000, 1000)]),
     };
 
@@ -232,7 +243,18 @@ mod tests {
         let mut field = Field {
             size: 5,
             spots: '.',
-            rope: Vec::from([(0, 0), (0, 0)]),
+            rope: Vec::from([
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+                (0, 0),
+            ]),
             visited: Vec::from([(0, 0)]),
         };
 
@@ -248,8 +270,8 @@ mod tests {
         ]);
         field.render(&tokens);
 
-        assert_eq!(field.to_string(), "..ss.\n...ss\n.1Hss\n....s\nssss.\n");
+        assert_eq!(field.to_string(), ".....\n.....\n.1H3.\n.5...\n6....\n");
     }
 }
 
-pub const CORRECT_ANSWER: i32 = 6212;
+pub const CORRECT_ANSWER: i32 = 2522;
