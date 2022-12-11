@@ -19,7 +19,7 @@ pub fn parse_input(input: &String) -> Tokens {
     input.clone()
 }
 
-pub fn get_answer(_tokens: &Tokens) -> i32 {
+pub fn get_answer(_tokens: &Tokens) -> i64 {
     let mut monkeys = [
         Monkey {
             items: Vec::from([76, 88, 96, 97, 58, 61, 67]),
@@ -119,21 +119,23 @@ pub fn get_answer(_tokens: &Tokens) -> i32 {
         },
     ];
 
-    for _ in 1..=20 {
+    let supermodulo = 3 * 11 * 19 * 5 * 2 * 7 * 17 * 13;
+
+    for _ in 1..=10000 {
         for i in 0..monkeys.len() {
             let items = monkeys[i].items.clone();
             monkeys[i].items.clear();
             for item in items {
                 let mut new = (monkeys[i].operation)(item);
                 monkeys[i].inspections += 1;
-                new /= 3;
+                new %= supermodulo;
                 let Throw { monkey, item } = (monkeys[i].test)(new);
                 monkeys[monkey].items.push(item);
             }
         }
     }
 
-    let mut inspections: Vec<i32> = monkeys.iter().map(|m| m.inspections).collect();
+    let mut inspections: Vec<i64> = monkeys.iter().map(|m| m.inspections).collect();
 
     inspections.sort();
     inspections.reverse();
@@ -141,7 +143,7 @@ pub fn get_answer(_tokens: &Tokens) -> i32 {
     inspections[0] * inspections[1]
 }
 
-type Item = i32;
+type Item = i64;
 type MonekyId = usize;
 
 struct Throw {
@@ -152,9 +154,9 @@ struct Throw {
 #[derive(Debug)]
 struct Monkey {
     items: Vec<Item>,
-    inspections: i32,
+    inspections: i64,
     operation: fn(Item) -> Item,
     test: fn(Item) -> Throw,
 }
 
-pub const CORRECT_ANSWER: i32 = 182293;
+pub const CORRECT_ANSWER: i64 = 54832778815;
