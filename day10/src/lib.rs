@@ -47,8 +47,7 @@ pub fn parse_input(input: &String) -> Tokens {
     tokens
 }
 
-pub fn get_answer(tokens: &Tokens) -> i32 {
-    let mut num = 0;
+pub fn get_answer(tokens: &Tokens) -> String {
     let mut reg_value: i32 = 1;
 
     let mut iter = tokens.iter();
@@ -57,13 +56,22 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
         let token = iter.next().unwrap();
         match token {
             Token::Noop(cycles) => (*cycles, Token::Noop(*cycles)),
-            Token::Addx(cycles, awd) => (*cycles, Token::Addx(*cycles, *awd)),
+            Token::Addx(cycles, value) => (*cycles, Token::Addx(*cycles, *value)),
         }
     };
 
-    for cycle in 1..=240 {
-        if [20, 60, 100, 140, 180, 220].contains(&cycle) {
-            num += cycle * reg_value;
+    let mut sprite_location;
+    let mut crt = ['.'; 240];
+
+    for cycle in 0..240 {
+        if [40, 80, 120, 160, 200, 240].contains(&cycle) {
+            reg_value += 40;
+        }
+
+        sprite_location = [reg_value - 1, reg_value, reg_value + 1];
+
+        if sprite_location.contains(&cycle) {
+            crt[cycle as usize] = '#';
         }
 
         wait_cycles -= 1;
@@ -88,7 +96,23 @@ pub fn get_answer(tokens: &Tokens) -> i32 {
         };
     }
 
-    num
+    let mut str = String::new();
+    for (pos, ch) in crt.iter().enumerate() {
+        if pos % 40 == 0 {
+            str.push('\n');
+        }
+        str.push(*ch);
+    }
+
+    println!("{str}");
+
+    str
 }
 
-pub const CORRECT_ANSWER: i32 = 14340;
+pub const CORRECT_ANSWER: &str = "
+###...##..###....##..##..###..#..#.###..
+#..#.#..#.#..#....#.#..#.#..#.#..#.#..#.
+#..#.#..#.#..#....#.#....###..####.#..#.
+###..####.###.....#.#....#..#.#..#.###..
+#....#..#.#....#..#.#..#.#..#.#..#.#....
+#....#..#.#.....##...##..###..#..#.#....";
