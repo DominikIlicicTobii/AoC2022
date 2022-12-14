@@ -70,24 +70,42 @@ pub fn parse_input(input: &String) -> Tokens {
 }
 
 pub fn get_answer(tokens: &Tokens) -> usize {
-    let mut iter = tokens.iter();
+    let mut tokens = tokens.clone();
+    let two = Vec::from([
+        Token::ListStart,
+        Token::ListStart,
+        Token::Number(2),
+        Token::ListEnd,
+        Token::ListEnd,
+    ]);
+    let six = Vec::from([
+        Token::ListStart,
+        Token::ListStart,
+        Token::Number(6),
+        Token::ListEnd,
+        Token::ListEnd,
+    ]);
 
-    let mut num = 0;
-    let mut index = 0;
-    loop {
-        index += 1;
-        let Some(first) = iter.next() else {break};
-        let Some(second) = iter.next() else {break};
+    tokens.push(two.clone());
+    tokens.push(six.clone());
 
-        let first = build_recursion(&first);
-        let second = build_recursion(&second);
+    let mut resursive_built = Vec::new();
 
-        if first < second {
-            num += index;
-        }
+    for token in tokens {
+        resursive_built.push(build_recursion(&token));
     }
 
-    num
+    resursive_built.sort();
+
+    let two_index = resursive_built
+        .binary_search(&build_recursion(&two.clone()))
+        .unwrap();
+
+    let six_index = resursive_built
+        .binary_search(&build_recursion(&six.clone()))
+        .unwrap();
+
+    (two_index + 1) * (six_index + 1)
 }
 
 #[derive(Debug, PartialEq, Clone, Eq)]
@@ -451,4 +469,4 @@ mod tests {
     }
 }
 
-pub const CORRECT_ANSWER: usize = 6369;
+pub const CORRECT_ANSWER: usize = 25800;
