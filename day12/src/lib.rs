@@ -36,7 +36,30 @@ pub fn parse_input(_input: &String) -> Tokens {
 }
 
 pub fn get_answer(tokens: &Tokens) -> i32 {
-    calculate(&tokens).unwrap()
+    let mut possible = Vec::new();
+    let height = tokens.len();
+    let width = tokens[0].len();
+
+    for i in 0..height {
+        for j in 0..width {
+            let mut tokens = tokens.clone();
+            if tokens[i][j] == 'a' as u8 {
+                tokens[i][j] = 'S' as u8;
+            } else {
+                continue;
+            }
+            match calculate(&tokens) {
+                Some(n) => {
+                    possible.push(n);
+                    continue;
+                }
+                None => continue,
+            }
+        }
+    }
+
+    possible.sort();
+    possible[0]
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -388,4 +411,4 @@ abdefghi
     }
 }
 
-pub const CORRECT_ANSWER: i32 = 437;
+pub const CORRECT_ANSWER: i32 = 430;
